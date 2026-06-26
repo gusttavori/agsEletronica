@@ -1,5 +1,35 @@
 const prisma = require('../config/database');
 
+/**
+ * Constrói condição WHERE para filtros de equipamento
+ */
+function buildWhere(filters) {
+  const where = {};
+
+  if (filters.categoria) {
+    where.categoria = filters.categoria;
+  }
+
+  if (filters.marca) {
+    where.marca = { contains: filters.marca, mode: 'insensitive' };
+  }
+
+  if (filters.clienteId) {
+    where.clienteId = parseInt(filters.clienteId, 10);
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { marca: { contains: filters.search, mode: 'insensitive' } },
+      { modelo: { contains: filters.search, mode: 'insensitive' } },
+      { numeroSerie: { contains: filters.search, mode: 'insensitive' } },
+      { cliente: { nome: { contains: filters.search, mode: 'insensitive' } } },
+    ];
+  }
+
+  return where;
+}
+
 const equipamentoRepository = {
   /**
    * Lista todos os equipamentos com filtros e paginação
@@ -90,42 +120,15 @@ const equipamentoRepository = {
     const where = buildWhere(filters);
     return prisma.equipamento.count({ where });
   },
+
+  /**
+   * Exclui uma foto de equipamento
+   */
+  deleteFoto: async (fotoId) => {
+    return await prisma.fotoEquipamento.delete({
+      where: { id: Number(fotoId) }
+    });
+  }
 };
-
-deleteFoto: async (fotoId) => {
-  return await prisma.fotoEquipamento.delete({
-    where: { id: Number(fotoId) }
-  });
-},
-
-/**
- * Constrói condição WHERE para filtros de equipamento
- */
-function buildWhere(filters) {
-  const where = {};
-
-  if (filters.categoria) {
-    where.categoria = filters.categoria;
-  }
-
-  if (filters.marca) {
-    where.marca = { contains: filters.marca, mode: 'insensitive' };
-  }
-
-  if (filters.clienteId) {
-    where.clienteId = parseInt(filters.clienteId, 10);
-  }
-
-  if (filters.search) {
-    where.OR = [
-      { marca: { contains: filters.search, mode: 'insensitive' } },
-      { modelo: { contains: filters.search, mode: 'insensitive' } },
-      { numeroSerie: { contains: filters.search, mode: 'insensitive' } },
-      { cliente: { nome: { contains: filters.search, mode: 'insensitive' } } },
-    ];
-  }
-
-  return where;
-}
 
 module.exports = equipamentoRepository;
