@@ -1,0 +1,34 @@
+{
+  "name": "ags-eletronica-backend",
+  "version": "1.0.0",
+  "description": "AGS Eletrônica - Backend API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon -L src/server.js",
+    "prisma:generate": "npx prisma generate --schema=src/prisma/schema.prisma",
+    "prisma:migrate": "npx prisma migrate dev --schema=src/prisma/schema.prisma",
+    "prisma:seed": "node src/prisma/seed.js",
+    "prisma:studio": "npx prisma studio --schema=src/prisma/schema.prisma",
+    "prisma:reset": "npx prisma migrate reset --schema=src/prisma/schema.prisma --force"
+  },
+  "prisma": {
+    "seed": "node src/prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prisma": "^6.9.0"
+  }
+}

@@ -1,0 +1,208 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TECNICO
+  ATENDENTE
+}
+
+enum CategoriaEquipamento {
+  TELEVISAO
+  SOM
+  AMPLIFICADOR
+  CODIFICADOR
+  RECEPTOR
+  DVD_BLURAY
+  OUTRO
+}
+
+enum StatusOS {
+  RECEBIDO
+  EM_DIAGNOSTICO
+  AGUARDANDO_APROVACAO
+  EM_REPARO
+  PRONTO
+  ENTREGUE
+}
+
+enum Prioridade {
+  BAIXA
+  NORMAL
+  ALTA
+  URGENTE
+}
+
+enum TipoItemOrcamento {
+  PECA
+  MAO_DE_OBRA
+}
+
+enum AcaoAuditoria {
+  CRIACAO
+  EDICAO
+  EXCLUSAO
+  MUDANCA_STATUS
+}
+
+model Usuario {
+  id            Int       @id @default(autoincrement())
+  nome          String
+  email         String    @unique
+  senha         String
+  role          Role      @default(TECNICO)
+  ativo         Boolean   @default(true)
+  refreshToken  String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  auditLogs     AuditLog[]
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  id            Int       @id @default(autoincrement())
+  nome          String
+  telefone      String?
+  whatsapp      String?
+  email         String?
+  endereco      String?
+  observacoes   String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  equipamentos  Equipamento[]
+  ordensServico OrdemServico[]
+
+  @@map("clientes")
+}
+
+model Equipamento {
+  id            Int                   @id @default(autoincrement())
+  clienteId     Int                   @map("cliente_id")
+  categoria     CategoriaEquipamento
+  marca         String
+  modelo        String
+  numeroSerie   String?               @map("numero_serie")
+  dataEntrada   DateTime              @default(now()) @map("data_entrada")
+  observacoes   String?
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+  cliente       Cliente               @relation(fields: [clienteId], references: [id])
+  ordensServico OrdemServico[]
+  fotos         FotoEquipamento[]
+
+  @@map("equipamentos")
+}
+
+model OrdemServico {
+  id              Int           @id @default(autoincrement())
+  numeroOs        String        @unique @map("numero_os")
+  clienteId       Int           @map("cliente_id")
+  equipamentoId   Int           @map("equipamento_id")
+  defeitoInformado String?      @map("defeito_informado")
+  diagnostico     String?
+  solucao         String?
+  prioridade      Prioridade    @default(NORMAL)
+  status          StatusOS      @default(RECEBIDO)
+  valorMaoObra    Decimal?      @default(0) @map("valor_mao_obra") @db.Decimal(10, 2)
+  valorTotal      Decimal?      @default(0) @map("valor_total") @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  cliente         Cliente       @relation(fields: [clienteId], references: [id])
+  equipamento     Equipamento   @relation(fields: [equipamentoId], references: [id])
+  historico       HistoricoMovimentacao[]
+  itensOrcamento  ItemOrcamento[]
+
+  @@map("ordens_servico")
+}
+
+model HistoricoMovimentacao {
+  id              Int       @id @default(autoincrement())
+  ordemServicoId  Int       @map("ordem_servico_id")
+  statusAnterior  StatusOS? @map("status_anterior")
+  statusNovo      StatusOS  @map("status_novo")
+  descricao       String
+  createdAt       DateTime  @default(now()) @map("created_at")
+  ordemServico    OrdemServico @relation(fields: [ordemServicoId], references: [id], onDelete: Cascade)
+
+  @@map("historico_movimentacoes")
+}
+
+model ItemOrcamento {
+  id              Int               @id @default(autoincrement())
+  ordemServicoId  Int               @map("ordem_servico_id")
+  tipo            TipoItemOrcamento
+  descricao       String
+  quantidade      Int               @default(1)
+  valorUnitario   Decimal           @map("valor_unitario") @db.Decimal(10, 2)
+  subtotal        Decimal           @db.Decimal(10, 2)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  ordemServico    OrdemServico      @relation(fields: [ordemServicoId], references: [id], onDelete: Cascade)
+
+  @@map("itens_orcamento")
+}
+
+model FotoEquipamento {
+  id              Int       @id @default(autoincrement())
+  equipamentoId   Int       @map("equipamento_id")
+  url             String
+  tipo            String?
+  descricao       String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  equipamento     Equipamento @relation(fields: [equipamentoId], references: [id], onDelete: Cascade)
+
+  @@map("fotos_equipamento")
+}
+
+model BancoDefeitos {
+  id              Int                   @id @default(autoincrement())
+  marca           String
+  modelo          String
+  categoria       CategoriaEquipamento
+  sintoma         String
+  diagnostico     String
+  solucao         String
+  pecasUtilizadas String?               @map("pecas_utilizadas")
+  observacoes     String?
+  ordemServicoId  Int?                  @map("ordem_servico_id")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  @@map("banco_defeitos")
+}
+
+model PadraoDefeitoModelo {
+  id              Int                   @id @default(autoincrement())
+  marca           String
+  modelo          String
+  categoria       CategoriaEquipamento
+  defeitosRecorrentes String[]          @map("defeitos_recorrentes")
+  ocorrencias     Int                   @default(1)
+  ultimaOcorrencia DateTime?            @map("ultima_ocorrencia")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  @@unique([marca, modelo])
+  @@map("padrao_defeito_modelo")
+}
+
+model AuditLog {
+  id              Int           @id @default(autoincrement())
+  usuarioId       Int?          @map("usuario_id")
+  entidade        String
+  entidadeId      Int           @map("entidade_id")
+  acao            AcaoAuditoria
+  dadosAnteriores Json?         @map("dados_anteriores")
+  dadosNovos      Json?         @map("dados_novos")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  usuario         Usuario?      @relation(fields: [usuarioId], references: [id])
+
+  @@map("audit_logs")
+}
