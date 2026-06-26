@@ -9,10 +9,28 @@ const { errorHandler } = require('./middlewares/errorHandler');
 const app = express();
 
 // ─── CORS ──────────────────────────────────────────────────────────────
+const origensPermitidas = [
+  'https://ags-eletronica.vercel.app', // Sua URL de produção na Vercel
+  'http://localhost:5173',             // Seu ambiente local de desenvolvimento
+  'http://localhost:3000'
+];
+
+// Caso você adicione um domínio próprio no futuro pelo painel do Render
+if (process.env.FRONTEND_URL) {
+  origensPermitidas.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL || 'http://localhost'
-    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost'],
+  origin: function (origin, callback) {
+    // Permite requisições sem origin (como Insomnia/Postman)
+    if (!origin) return callback(null, true);
+    
+    if (origensPermitidas.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Acesso bloqueado pela política CORS. Origem não permitida: ${origin}`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

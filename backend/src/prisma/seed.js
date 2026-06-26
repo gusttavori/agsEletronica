@@ -5,9 +5,7 @@ const prisma = new PrismaClient();
 
 // Mantemos apenas os usuários para garantir o seu acesso ao sistema
 const USUARIOS = [
-  { nome: 'Administrador', email: 'admin@agseletronica.com', senha: 'admin123', role: 'ADMIN' },
-  { nome: 'Carlos Técnico', email: 'tecnico@agseletronica.com', senha: 'tecnico123', role: 'TECNICO' },
-  { nome: 'Ana Atendente', email: 'atendente@agseletronica.com', senha: 'atendente123', role: 'ATENDENTE' },
+  { nome: 'Almiro Gonçalves', email: 'almiro-gs@hotmail.com', senha: 'ags@Eletronica73', role: 'ADMIN' },
 ];
 
 async function main() {
@@ -35,18 +33,18 @@ async function main() {
       data: { nome: u.nome, email: u.email, senha: hash, role: u.role, ativo: true },
     });
     usuarios.push(usuario);
-    console.log(`   ✓ ${u.email} (${u.role})`);
+    console.log(`   ✓ ${u.nome} | ${u.email} (${u.role})`);
   }
 
   // ─── Resumo ──────────────────────────────────────────────────────
   console.log('\n╔══════════════════════════════════════════════════════╗');
-  console.log('║              🌱 SEED CONCLUÍDO COM SUCESSO           ║');
+  console.log('║               🌱 SEED CONCLUÍDO COM SUCESSO          ║');
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log('║  Banco de dados inicializado e pronto para uso real. ║');
   console.log('║                                                      ║');
   console.log('║  Login Admin:                                        ║');
-  console.log('║  Email: admin@agseletronica.com                      ║');
-  console.log('║  Senha: admin123                                     ║');
+  console.log('║  Email: almiro-gs@hotmail.com                        ║');
+  console.log('║  Senha: ags@Eletronica73                             ║');
   console.log('╚══════════════════════════════════════════════════════╝');
 }
 
